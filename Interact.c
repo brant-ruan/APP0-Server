@@ -103,7 +103,7 @@ Status Interact(int *mobFd, int *webFd)
 											| LOGOUT_L | QRIDEN_L))){
 					struct Header header;
 					int len = ReadN(&(evlist[j].data.fd), \
-							(char *)&header, sizeof(header));
+							(char *)&header, sizeof(struct Header));
 					if(len == ERROR){
 						if(close(evlist[j].data.fd) == -1){
 							perror("close");
@@ -116,6 +116,24 @@ Status Interact(int *mobFd, int *webFd)
 					switch(header.lType){
 					case LOGIN_L:
 						struct CS_LogIn logIn;
+						len = ReadN(&(evlist[j].data.fd), \
+								(char *)&logIn, sizeof(struct CS_LogIn));
+						if(len == ERROR){
+							if(close(evlist[j].data.fd) == -1){
+								perror("close");
+							}
+							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
+						}
+						if(HaveLogged(&logIn) == YES){
+							GenLogIn(&response, ERR_ALREADY);
+						}
+						else if(DBLogIn(logIn.username, logIn.password) == YES){
+							GenLogIn(&response, evlist[j].data.fd);
+							MobileUp(&mfd, tmp, &logIn);
+						}
+						else{
+							GenLogIn(&response, ERR_WRONG);
+						}
 						mfd.arr[tmp].flag |= LOGIN_L;
 						break;
 					case SIGNUP_L:

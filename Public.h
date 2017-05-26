@@ -77,18 +77,20 @@ struct CS_LogOut{
 
 #define ERR_NONE		0 		// that means operation succeeded
 #define ERR_DUP			0x1	 	// user exists when signing up
-#define ERR_WRONG		0x2		// username or password is wrong (or both)
+#define ERR_ALREADY		0x2		// user already logged in
+#define ERR_WRONG		-1		// username or password is wrong (or both)
 // if err > 2, it is current fd used by server for this socket
 struct SC_Response{
 	struct Header header;
-	u_int err;
+	int err;
 };
 
 struct MobArr{
 	int fd;
 	int flag;
 	int state;
-	char name[USERNAME_LEN + 1];
+	int namefd;
+	char name[USERNAME_LEN];
 };
 
 struct MFD{

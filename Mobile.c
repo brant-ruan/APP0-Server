@@ -23,6 +23,7 @@ void MFDAdd(struct MFD *mfd, int fd)
 		mfd->arr[mfd->num].fd = fd;
 		mfd->arr[mfd->num].state = MOBILE_DOWN;
 		mfd->arr[mfd->num].flag = 0;
+		mfd->arr[mfd->num].namefd = -1;
 		mfd->num += 1;
 	}
 	else
@@ -55,4 +56,20 @@ void MFDDel(struct MFD *mfd, int index, char *path)
 		mfd.arr[index].flag = 0;
 		MFDSub(&mfd, index);
 	}
+}
+
+Status MobileUp(struct MFD *mfd, int index, struct CS_LogIn *logIn)
+{
+	mfd->arr[index].state = MOBILE_UP;
+	snprintf(mfd->arr[index].name, \
+			USERNAME_LEN, "%s", logIn->username);
+	char USER_PATH
+	mfd->arr[index].namefd = open();
+
+	return OK;
+}
+
+Status HaveLogged(struct CS_LogIn *logIn)
+{
+	return OK;
 }

@@ -23,7 +23,17 @@ Status GenLogout(struct SC_Response *response)
 	GenHeader(&(response->header), LOGOUT_L, \
 			sizeof(struct SC_Response) - sizeof(struct Header));
 
-	response->err = ERR_NONE;
+	response->err = htonl(ERR_NONE);
+
+	return OK;
+}
+
+Status GenLogoIn(struct SC_Response *response, int retNum)
+{
+	GenHeader(&(response->header), LOGIN_L, \
+			sizeof(struct SC_Response) - sizeof(struct Header));
+
+	response->err = htonl(retNum);
 
 	return OK;
 }
