@@ -23,7 +23,6 @@ void MFDAdd(struct MFD *mfd, int fd)
 		mfd->arr[mfd->num].fd = fd;
 		mfd->arr[mfd->num].state = MOBILE_DOWN;
 		mfd->arr[mfd->num].flag = 0;
-		mfd->arr[mfd->num].namefd = -1;
 		mfd->num += 1;
 	}
 	else
@@ -32,7 +31,14 @@ void MFDAdd(struct MFD *mfd, int fd)
 
 void MFDSub(struct MFD *mfd, int index)
 {
-
+	if(mfd->num > 0)
+	{
+		if(index < mfd->num - 1){
+			memcpy(&(mfd->arr[index]), &(mfd->arr[index + 1]), \
+					sizeof(mfd->arr[index]) * (mfd->num - 1 - index));
+		}
+		mfd->num -= 1;
+	}
 }
 
 int MFDIndex(struct MFD *mfd, int fd)
@@ -49,27 +55,37 @@ void MFDDel(struct MFD *mfd, int index, char *path)
 {
 	char userPath[USER_PATH_LEN] = {0};
 	if(index >= 0){
-		sprintf(userPath, "%s%s", MOBILE_USER_PATH, \
-				mfd.arr[index].name);
+		sprintf(userPath, "%s%s", path, \
+				mfd->arr[index].name);
 		unlink(userPath);
-		mfd.arr[index].state = MOBILE_DOWN;
-		mfd.arr[index].flag = 0;
-		MFDSub(&mfd, index);
+		MFDSub(mfd, index);
 	}
 }
 
-Status MobileUp(struct MFD *mfd, int index, struct CS_LogIn *logIn)
+Status MobileUp(struct MFD *mfd, int index, char *path)
 {
 	mfd->arr[index].state = MOBILE_UP;
-	snprintf(mfd->arr[index].name, \
-			USERNAME_LEN, "%s", logIn->username);
-	char USER_PATH
-	mfd->arr[index].namefd = open();
+	char userPath[USER_PATH_LEN] = {0};
+	sprintf(userPath, "%s%s", path, mfd->arr[index].name);
+	int fd;
+	while((fd = open(userPath, O_RDWR | O_CREAT)) == -1){ // create a file named with username
+		perror("open");
+	}
+	close(fd);
 
 	return OK;
 }
 
-Status HaveLogged(struct CS_LogIn *logIn)
+Status HaveLogged(char *username, char *path)
 {
-	return OK;
+	char userPath[USER_PATH_LEN] = {0};
+
+	sprintf(userPath, "%s%s", path, username);
+	int fd = open(userPath, O_RDONLY);
+	if(fd == -1){
+		return NO;
+	}
+
+	close(fd);
+	return YES;
 }

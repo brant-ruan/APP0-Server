@@ -11,11 +11,11 @@ const char MOBILE_USER_PATH[] = "./MobileLogin/";
 const char WEB_USER_PATH[] = "./WebLogin/";
 const char QRCODE_PATH[] = "./QRCode/";
 
-const char DB_IP = "localhost";
+const char DB_IP[] = "localhost";
 const char DB_PORT = 0;
-const char DB_NAME = "APP0";
-const char DB_USER = "root";
-const char DB_PASSWD = "root123";
+const char DB_NAME[] = "APP0";
+const char DB_USER[] = "root";
+const char DB_PASSWD[] = "root123";
 
 Status Interact(int *mobFd, int *webFd)
 {
@@ -56,9 +56,9 @@ Status Interact(int *mobFd, int *webFd)
 	socklen_t cliLen;
 	bzero(&cAddr, sizeof(cAddr));
 	int ready = 0;
-	while(mfd->num > 0){
+	while(mfd.num > 0){
 		printf("New day new chance\n");
-		ready = epoll_wait(epFd, evlist, mfd->num, -1);
+		ready = epoll_wait(epFd, evlist, mfd.num, -1);
 		if(ready == -1){
 			if(errno == EINTR) // interrupted by signal
 				continue;
@@ -74,7 +74,7 @@ Status Interact(int *mobFd, int *webFd)
 					(evlist[j].events & EPOLLOUT) ? "EPOLLOUT " : "", \
 					(evlist[j].events & EPOLLHUP) ? "EPOLLHUP " : "", \
 					(evlist[j].events & EPOLLERR) ? "EPOLLERR " : "");
-			if(evlist[j].data.fd == mfd->arr[0].fd){ // listen socket
+			if(evlist[j].data.fd == mfd.arr[0].fd){ // listen socket
 				if(evlist[j].events & EPOLLIN){ // fish comes
 					cliLen = sizeof(cAddr);
 					tmp = accept(mfd.arr[0].fd, (struct sockaddr *)&cAddr, &cliLen);
@@ -97,12 +97,16 @@ Status Interact(int *mobFd, int *webFd)
 			}
 			else{
 				tmp = MFDIndex(&mfd, evlist[j].data.fd);
-				struct SC_Reponse response;
+				struct SC_Response response;
+				struct CS_LogIn logIn;
+				struct CS_SignUp signUp;
+				struct CS_QRIden qrIden;
+				char password[PASSWORD_LEN + 1] = {0};
 				if((evlist[j].events & EPOLLIN) \
 					&& !(mfd.arr[tmp].flag & (LOGIN_L | SIGNUP_L \
 											| LOGOUT_L | QRIDEN_L))){
 					struct Header header;
-					int len = ReadN(&(evlist[j].data.fd), \
+					int len = RecvN(&(evlist[j].data.fd), \
 							(char *)&header, sizeof(struct Header));
 					if(len == ERROR){
 						if(close(evlist[j].data.fd) == -1){
@@ -115,8 +119,7 @@ Status Interact(int *mobFd, int *webFd)
 					}
 					switch(header.lType){
 					case LOGIN_L:
-						struct CS_LogIn logIn;
-						len = ReadN(&(evlist[j].data.fd), \
+						len = RecvN(&(evlist[j].data.fd), \
 								(char *)&logIn, sizeof(struct CS_LogIn));
 						if(len == ERROR){
 							if(close(evlist[j].data.fd) == -1){
@@ -124,12 +127,14 @@ Status Interact(int *mobFd, int *webFd)
 							}
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
-						if(HaveLogged(&logIn) == YES){
+						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", logIn.username);
+						snprintf(password, PASSWORD_LEN, "%s", logIn.password);
+						if(HaveLogged(mfd.arr[tmp].name, MOBILE_USER_PATH) == YES){
 							GenLogIn(&response, ERR_ALREADY);
 						}
-						else if(DBLogIn(logIn.username, logIn.password) == YES){
+						else if(DBLogIn(mysql, mfd.arr[tmp].name, password) == YES){
 							GenLogIn(&response, evlist[j].data.fd);
-							MobileUp(&mfd, tmp, &logIn);
+							MobileUp(&mfd, tmp, MOBILE_USER_PATH);
 						}
 						else{
 							GenLogIn(&response, ERR_WRONG);
@@ -137,11 +142,30 @@ Status Interact(int *mobFd, int *webFd)
 						mfd.arr[tmp].flag |= LOGIN_L;
 						break;
 					case SIGNUP_L:
-						struct CS_SignUp signUp;
+						len = RecvN(&(evlist[j].data.fd), \
+								(char *)&signUp, sizeof(struct CS_SignUp));
+						if(len == ERROR){
+							if(close(evlist[j].data.fd) == -1){
+								perror("close");
+							}
+							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
+						}
+						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", signUp.username);
+						snprintf(password, PASSWORD_LEN, "%s", signUp.password);
+						if(HaveLogged(mfd.arr[tmp].name, MOBILE_USER_PATH) == YES){
+							GenSignUp(&response, ERR_ALREADY);
+						}
+						else if(DBSignUp(mysql, mfd.arr[tmp].name, password) != YES){
+							perror("DBSignUp");
+							GenSignUp(&response, ERR_DUP);
+						}
+						else{
+							GenSignUp(&response, evlist[j].data.fd);
+							MobileUp(&mfd, tmp, MOBILE_USER_PATH);
+						}
 						mfd.arr[tmp].flag |= SIGNUP_L;
 						break;
 					case QRIDEN_L:
-						struct CS_QRIden qrIden;
 						mfd.arr[tmp].flag |= QRIDEN_L;
 
 						break;
@@ -159,7 +183,7 @@ Status Interact(int *mobFd, int *webFd)
 				if((evlist[j].events & EPOLLOUT) && (mfd.arr[tmp].flag != 0)){
 					int len;
 					len = SendN(evlist[j].data.fd, \
-							(char *)response, sizeof(struct SC_Response));
+							(char *)&response, sizeof(struct SC_Response));
 					if(len == ERROR || (mfd.arr[tmp].flag & LOGOUT_L)){
 						if(close(evlist[j].data.fd) == -1){
 							perror("close");

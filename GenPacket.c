@@ -18,7 +18,7 @@ Status GenHeader(struct Header *header, \
 	return OK;
 }
 
-Status GenLogout(struct SC_Response *response)
+Status GenLogOut(struct SC_Response *response)
 {
 	GenHeader(&(response->header), LOGOUT_L, \
 			sizeof(struct SC_Response) - sizeof(struct Header));
@@ -28,9 +28,19 @@ Status GenLogout(struct SC_Response *response)
 	return OK;
 }
 
-Status GenLogoIn(struct SC_Response *response, int retNum)
+Status GenLogIn(struct SC_Response *response, int retNum)
 {
 	GenHeader(&(response->header), LOGIN_L, \
+			sizeof(struct SC_Response) - sizeof(struct Header));
+
+	response->err = htonl(retNum);
+
+	return OK;
+}
+
+Status GenSignUp(struct SC_Response *response, int retNum)
+{
+	GenHeader(&(response->header), SIGNUP_L, \
 			sizeof(struct SC_Response) - sizeof(struct Header));
 
 	response->err = htonl(retNum);

@@ -7,6 +7,8 @@
 #include "Public.h"
 #endif
 
+#define QUERY_LEN	256
+
 /*
  * Database	: APP0
  * Table	: User
@@ -21,7 +23,7 @@
  * */
 const char QUERY_LOGIN[] = \
 	"SELECT count(username) FROM User WHERE username = %s AND password = %s;";
-const char QUERY_SIGNUP[] = "SELECT count(username) FROM User WHERE username = %s;";
+const char QUERY_SIGNUP[] = "SELECT count(username) FROM User WHERE username = '%s';";
 const char QUERY_ADDUSER[] = "INSERT INTO User values('%s', '%s');";
 
 /* Initialize MySQL object */
@@ -70,8 +72,18 @@ Status DBClose(void *dbObj)
  * If username existed, return NO
  * else add user into database, return YES
  * */
-Status DBSignUp(char *username, char *password)
+Status DBSignUp(MYSQL *mysql, char *username, char *password)
 {
+	MYSQL_RES *mysqlRes;
+	char query[QUERY_LEN];
+	sprintf(query, QUERY_SIGNUP, username);
+	mysql_query(mysql, query);
+	mysqlRes = mysql_store_result(mysql);
+
+	sprintf(query, QUERY_ADDUSER, username, password);
+	mysql_query(mysql, query);
+	mysqlRes = mysql_store_result(mysql);
+
 	return YES;
 }
 
@@ -79,7 +91,7 @@ Status DBSignUp(char *username, char *password)
  * If no such user, return NO
  * else return YES
  * */
-Status DBLogIn(char *username, char *password)
+Status DBLogIn(MYSQL *mysq, char *username, char *password)
 {
 
 	return YES;

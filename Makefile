@@ -1,5 +1,5 @@
 object = Main.o Socket.o Database.o \
-		 QRCode.o Interact.o HTML.o Mobile.o
+		 QRCode.o GenPacket.o Interact.o HTML.o Mobile.o
 
 ts: $(object)
 	gcc -o ts $(object) -lmysqlclient
@@ -13,11 +13,14 @@ Database.o: Database.c
 
 QRCode.o: QRCode.c
 
+GenPacket.o: GenPacket.c
+
 Interact.o: Interact.c
 
 HTML.o: HTML.c
 
 Mobile.o: Mobile.c
+
 
 .PHONY:
 clean:
