@@ -34,6 +34,12 @@
 #define MOBILE_DOWN	0
 
 #define USER_PATH_LEN	36
+#define QRCODE_PATH_LEN	48
+
+#define RECVBUF_LEN	1024
+#define SENDBUF_LEN	2048
+
+#define  QR_SUFFIX "_qr.png"
 // -----------------------------> [struct]
 #define SC_H	0x11
 #define CS_H	0x91
@@ -94,6 +100,17 @@ struct MobArr{
 
 struct MFD{
 	struct MobArr arr[MFD_NUM];
+	int num;
+};
+
+struct WebArr{
+	int fd;
+	int flag;
+	char ip[IP_LEN + 1];
+};
+
+struct WFD{
+	struct WebArr arr[WFD_NUM];
 	int num;
 };
 // -----------------------------> [typedef]

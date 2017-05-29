@@ -31,7 +31,7 @@ void MFDAdd(struct MFD *mfd, int fd)
 
 void MFDSub(struct MFD *mfd, int index)
 {
-	if(mfd->num > 0)
+	if(mfd->num > 1)
 	{
 		if(index < mfd->num - 1){
 			memcpy(&(mfd->arr[index]), &(mfd->arr[index + 1]), \
@@ -54,9 +54,10 @@ int MFDIndex(struct MFD *mfd, int fd)
 void MFDDel(struct MFD *mfd, int index, char *path)
 {
 	char userPath[USER_PATH_LEN] = {0};
-	if(index >= 0){
+	if(index > 0){
 		sprintf(userPath, "%s%s", path, \
 				mfd->arr[index].name);
+		//printf("del %s\n", userPath);
 		unlink(userPath);
 		MFDSub(mfd, index);
 	}
@@ -68,7 +69,8 @@ Status MobileUp(struct MFD *mfd, int index, char *path)
 	char userPath[USER_PATH_LEN] = {0};
 	sprintf(userPath, "%s%s", path, mfd->arr[index].name);
 	int fd;
-	while((fd = open(userPath, O_RDWR | O_CREAT)) == -1){ // create a file named with username
+	// create a file named with username
+	while((fd = open(userPath, O_RDWR | O_CREAT)) == -1){
 		perror("open");
 	}
 	close(fd);

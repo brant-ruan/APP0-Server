@@ -57,7 +57,6 @@ Status Interact(int *mobFd, int *webFd)
 	bzero(&cAddr, sizeof(cAddr));
 	int ready = 0;
 	while(mfd.num > 0){
-		printf("New day new chance\n");
 		ready = epoll_wait(epFd, evlist, mfd.num, -1);
 		if(ready == -1){
 			if(errno == EINTR) // interrupted by signal
@@ -67,9 +66,8 @@ Status Interact(int *mobFd, int *webFd)
 				goto LABEL_ERR;
 			}
 		}
-		printf("Look! %d little fish comes\n", ready);
-		for(j = 0; i < ready; j++){
-			printf("fd=%d events: %s%s%s\n", evlist[j].data.fd, \
+		for(j = 0; j < ready; j++){
+		//	printf("fd=%d events: %s%s%s\n", evlist[j].data.fd, \
 					(evlist[j].events & EPOLLIN) ? "EPOLLIN " : "", \
 					(evlist[j].events & EPOLLOUT) ? "EPOLLOUT " : "", \
 					(evlist[j].events & EPOLLHUP) ? "EPOLLHUP " : "", \
@@ -85,6 +83,7 @@ Status Interact(int *mobFd, int *webFd)
 							perror("accept");
 						}
 					}
+
 					MFDAdd(&mfd, tmp);
 					// add fish into basket
 					ev.events = EPOLLIN | EPOLLOUT;
@@ -96,7 +95,9 @@ Status Interact(int *mobFd, int *webFd)
 				// nothing to do currently
 			}
 			else{
+				printf("mfd.num: %d\n", mfd.num);
 				tmp = MFDIndex(&mfd, evlist[j].data.fd);
+				printf("tmp: %d\n", tmp);
 				struct SC_Response response;
 				struct CS_LogIn logIn;
 				struct CS_SignUp signUp;
@@ -112,7 +113,9 @@ Status Interact(int *mobFd, int *webFd)
 						if(close(evlist[j].data.fd) == -1){
 							perror("close");
 						}
+						epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 						MFDDel(&mfd, tmp, MOBILE_USER_PATH);
+						continue; // this socket is ok
 					}
 					if(header.hType != CS_H){
 						printf("header.hType invalid\n");
@@ -125,10 +128,14 @@ Status Interact(int *mobFd, int *webFd)
 							if(close(evlist[j].data.fd) == -1){
 								perror("close");
 							}
+							epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
 						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", logIn.username);
 						snprintf(password, PASSWORD_LEN, "%s", logIn.password);
+						printf("username: %s\n", mfd.arr[tmp].name);
+						printf("password: %s\n", password);
+						printf("logining\n");
 						if(HaveLogged(mfd.arr[tmp].name, MOBILE_USER_PATH) == YES){
 							GenLogIn(&response, ERR_ALREADY);
 						}
@@ -148,10 +155,13 @@ Status Interact(int *mobFd, int *webFd)
 							if(close(evlist[j].data.fd) == -1){
 								perror("close");
 							}
+							epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
 						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", signUp.username);
 						snprintf(password, PASSWORD_LEN, "%s", signUp.password);
+						printf("signup name: %s\n", mfd.arr[tmp].name);
+						printf("signup password: %s\n", password);
 						if(HaveLogged(mfd.arr[tmp].name, MOBILE_USER_PATH) == YES){
 							GenSignUp(&response, ERR_ALREADY);
 						}
@@ -182,13 +192,18 @@ Status Interact(int *mobFd, int *webFd)
 				}
 				if((evlist[j].events & EPOLLOUT) && (mfd.arr[tmp].flag != 0)){
 					int len;
-					len = SendN(evlist[j].data.fd, \
+					printf("Before send\n");
+					len = SendN(&(evlist[j].data.fd), \
 							(char *)&response, sizeof(struct SC_Response));
+					printf("err: %d\n", response.err);
+	//				printf("After send\n");
 					if(len == ERROR || (mfd.arr[tmp].flag & LOGOUT_L)){
 						if(close(evlist[j].data.fd) == -1){
 							perror("close");
 						}
+						epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 						MFDDel(&mfd, tmp, MOBILE_USER_PATH);
+						printf("now mfd.num: %d\n", mfd.num);
 					}
 					mfd.arr[tmp].flag = 0;
 				}
@@ -198,6 +213,7 @@ Status Interact(int *mobFd, int *webFd)
 					if(close(evlist[j].data.fd) == -1){
 						perror("close");
 					}
+					epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 					MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 				}
 			}

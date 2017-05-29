@@ -22,7 +22,7 @@
  * So, how to prevent it?
  * */
 const char QUERY_LOGIN[] = \
-	"SELECT count(username) FROM User WHERE username = %s AND password = %s;";
+	"SELECT count(username) FROM User WHERE username = '%s' AND password = '%s';";
 const char QUERY_SIGNUP[] = "SELECT count(username) FROM User WHERE username = '%s';";
 const char QUERY_ADDUSER[] = "INSERT INTO User values('%s', '%s');";
 
@@ -74,15 +74,40 @@ Status DBClose(void *dbObj)
  * */
 Status DBSignUp(MYSQL *mysql, char *username, char *password)
 {
+	int queryRes = 0;
 	MYSQL_RES *mysqlRes;
+	MYSQL_ROW row;
+
 	char query[QUERY_LEN];
 	sprintf(query, QUERY_SIGNUP, username);
-	mysql_query(mysql, query);
+	queryRes = mysql_query(mysql, query);
+	if(queryRes){
+		printf("MySQL error: %s\n", mysql_error(mysql));
+	}
+	printf("signup query: %s\n", query);
 	mysqlRes = mysql_store_result(mysql);
+	if(mysqlRes){
+		if((unsigned long)mysql_num_rows(mysqlRes) > 0){
+			row = mysql_fetch_row(mysqlRes);
+			printf("row[0]: %s\n", row[0]);
+			if(atoi(row[0]) > 0){
+				printf("User existed\n");
+				mysql_free_result(mysqlRes);
+				return NO; // username existed
+			}
+		}
+	}
+	else{
+		printf("mysql_store_result error: %s\n", mysql_error(mysql));
+	}
 
+	mysql_free_result(mysqlRes);
 	sprintf(query, QUERY_ADDUSER, username, password);
-	mysql_query(mysql, query);
-	mysqlRes = mysql_store_result(mysql);
+	printf("insert query: %s\n", query);
+	queryRes = mysql_query(mysql, query);
+	if(queryRes){
+		printf("MySQL error: %s\n", mysql_error(mysql));
+	}
 
 	return YES;
 }
@@ -91,8 +116,25 @@ Status DBSignUp(MYSQL *mysql, char *username, char *password)
  * If no such user, return NO
  * else return YES
  * */
-Status DBLogIn(MYSQL *mysq, char *username, char *password)
+Status DBLogIn(MYSQL *mysql, char *username, char *password)
 {
+	int queryRes = 0;
+	MYSQL_RES *mysqlRes;
+	char query[QUERY_LEN];
+	sprintf(query, QUERY_LOGIN, username, password);
+	queryRes = mysql_query(mysql, query);
+	printf("query: %s\n", query);
+	if(queryRes){
+		printf("MySQL error: %s\n", mysql_error(mysql));
+	}
+	mysqlRes = mysql_store_result(mysql);
 
-	return YES;
+	if(mysqlRes){
+		if((unsigned long)mysql_num_rows(mysqlRes) > 0){
+			mysql_free_result(mysqlRes);
+			return YES; // username existed
+		}
+	}
+	mysql_free_result(mysqlRes);
+	return NO;
 }

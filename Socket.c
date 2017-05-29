@@ -72,8 +72,31 @@ int RecvN(int *fd, char *buf, int len)
 	while(haveRecvd < len){
 		if((onceRecvd = read(*fd, buf + haveRecvd, len - haveRecvd)) <= 0){
 			perror("read");
-			if(errno != EAGAIN && errno != EINTR){
-				return ERROR;
+			if(onceRecvd == 0 || (errno != EAGAIN && errno != EINTR)){
+				return ERROR; // 0 means the peer close socket
+			}
+		}
+		haveRecvd += onceRecvd;
+	}
+
+	return len;
+}
+
+/* Used by my webServer */
+int RecvNN(int *fd, char *buf, int len)
+{
+	int haveRecvd = 0;
+	int onceRecvd = 0;
+	while(haveRecvd < len){
+		printf("haveRecvd: %d\n", haveRecvd);
+		if((onceRecvd = read(*fd, buf + haveRecvd, len - haveRecvd)) <= 0){
+			perror("read");
+			if(onceRecvd == 0 || (errno != EAGAIN && errno != EINTR)){
+				return ERROR; // 0 means the peer close socket
+			}
+			else if(errno == EAGAIN || errno == EINTR){
+				printf("go out\n");
+				break;
 			}
 		}
 		haveRecvd += onceRecvd;
@@ -93,6 +116,7 @@ int SendN(int *fd, char *sendBuf, int len)
 				return ERROR;
 			}
 		}
+		printf("sending\n");
 		haveSend += onceSend;
 	}
 

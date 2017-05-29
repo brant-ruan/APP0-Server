@@ -7,7 +7,9 @@
 #include "Public.h"
 #endif
 
-#define HTML_PREFIX \
+#define HTML_TEXT_PREFIX \
+	"HTTP/1.1 200 OK\r\n" \
+	"Content-Type: text/html; charset=UTF-8\r\n\r\n" \
 	"<!DOCTYPE html>\n" \
 	"<html>\n" \
 	  "<head>\n" \
@@ -21,7 +23,10 @@
 	  "</body>\n" \
 	"</html>\n"
 
-const char WEB_HAVENT[] = HTML_PREFIX "<img src=\"%s\">" HTML_SUFFIX;
+const char HTML_PNG_PREFIX[] = "HTTP/1.1 200 OK\r\n" \
+	"Content-Type: image/png\r\n\r\n";
 
-const char WEB_HAVE[] = HTML_PREFIX "<h1>Hello, %s</h1>" HTML_SUFFIX;
+const char WEB_HAVENT[] = HTML_TEXT_PREFIX "<h2>Where there is a will, there is a QRCode :)</h2><img src=\"%s\"></img>" HTML_SUFFIX;
+
+const char WEB_HAVE[] = HTML_TEXT_PREFIX "<h1>Hello, %s</h1>" HTML_SUFFIX;
 

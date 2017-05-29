@@ -31,12 +31,19 @@ Status GenQRCode(char *IP, char *path)
 	char enIP[EN_IP_LEN + 1] = {0};
 	Encrypt(enIP, IP);
 	char enCmd[CMD_LEN + 1] = {0};
-	sprintf(enCmd, "qr \"%s\" > %s%s_qr.png", enIP, path, IP);
+	printf("In GenQRCode: %s\n", path);
+	sprintf(enCmd, "qr \"%s\" > %s", enIP, path);
+	printf("cmd: %s\n", enCmd);
 	system(enCmd);
 
 	return OK;
 }
 
+/*
+ * '.' '0' '1' '2' '3' '4' '5' '6' '7' '8' '9'
+ * 												% 26 =
+ * 20	22	23	24	25	0	1	2	3	4	5
+ * */
 /* src must be a string end with '\0' */
 Status Encrypt(char *dst, char *src)
 {
