@@ -176,8 +176,32 @@ Status Interact(int *mobFd, int *webFd)
 						mfd.arr[tmp].flag |= SIGNUP_L;
 						break;
 					case QRIDEN_L:
+						len = RecvN(&(evlist[j].data.fd), \
+								(char *)&qrIden, sizeof(struct CS_QRIden));
+						if(len == ERROR){
+							if(close(evlist[j].data.fd) == -1){
+								perror("close");
+							}
+							epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
+							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
+						}
+						printf("recv qrcode\n");
+						if(mfd.arr[tmp].state == MOBILE_DOWN){
+							printf("mobile down\n");
+							GenQRIden(&response, ERR_WRONG);
+						}
+						else{
+							printf("set web logged in\n");
+							char ip[IP_LEN + 1] = {0};
+							strncpy(ip, qrIden.IP, IP_LEN);
+							if(QRLogIn(mfd.arr[tmp].name, ip, WEB_USER_PATH) == ERROR){
+								GenQRIden(&response, ERR_WRONG);
+							}
+							else{
+								GenQRIden(&response, ERR_NONE);
+							}
+						}
 						mfd.arr[tmp].flag |= QRIDEN_L;
-
 						break;
 					case LOGOUT_L:
 						if(mfd.arr[tmp].state == MOBILE_UP){

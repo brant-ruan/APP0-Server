@@ -69,12 +69,12 @@ struct CS_SignUp{
 	char password[PASSWORD_LEN]; // password md5
 };
 
-#define TOKEN_LEN		32
+// #define TOKEN_LEN		32
 struct CS_QRIden{
 //	struct Header header;
 	char IP[IP_LEN];
-	char username[USERNAME_LEN];
-	char password[PASSWORD_LEN];
+//	char username[USERNAME_LEN];
+//	char password[PASSWORD_LEN];
 };
 
 struct CS_LogOut{

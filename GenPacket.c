@@ -10,6 +10,9 @@
 extern const char HTML_PNG_PREFIX[];
 extern const char WEB_HAVE[];
 extern const char WEB_HAVENT[];
+extern const char WEB_LOGOUT[];
+/*------------------------------------> Mobile Interact */
+
 Status GenHeader(struct Header *header, \
 		char lType, char dataLen)
 {
@@ -51,9 +54,28 @@ Status GenSignUp(struct SC_Response *response, int retNum)
 	return OK;
 }
 
+Status GenQRIden(struct SC_Response *response, int retNum)
+{
+	GenHeader(&(response->header), QRIDEN_L, \
+			sizeof(struct SC_Response) - sizeof(struct Header));
+
+	response->err = htonl(retNum);
+	return OK;
+}
+
+/*------------------------------------> Web Interact */
+
 Status GenWebLogged(char *buf, int *len, char *username)
 {
 	sprintf(buf, WEB_HAVE, username);
+	*len = strlen(buf);
+
+	return OK;
+}
+
+Status GenWegLogOut(char *buf, int *len, char *username)
+{
+	sprintf(buf, WEB_LOGOUT, username);
 	*len = strlen(buf);
 
 	return OK;
@@ -98,3 +120,4 @@ Status GenWebPage(struct WFD *wfd, int index, \
 
 	return OK;
 }
+

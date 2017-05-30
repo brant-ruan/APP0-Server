@@ -8,7 +8,9 @@
 #endif
 
 const u_short WEB_PORT = 8001;
-char *imgNeedle = ".png HTTP/1.1";
+const char *imgNeedle = ".png HTTP/1.1";
+const char *outNeedle = "GET /logout HTTP/1.1";
+
 extern const char WEB_USER_PATH[];
 extern const char QRCODE_PATH[];
 
@@ -63,7 +65,8 @@ void WFDDel(struct WFD *wfd, int index, char *path)
 		sprintf(userPath, "%s%s", path, \
 				wfd->arr[index].ip);
 		//printf("del %s\n", userPath);
-		unlink(userPath);
+		// currently, do not del the ID-Card when one socket exits
+	//	unlink(userPath);
 		WFDSub(wfd, index);
 	}
 }
@@ -73,6 +76,7 @@ Status WebHaveLogged(struct WFD *wfd, int index, char *path, char *username)
 	char userPath[USER_PATH_LEN] = {0};
 	sprintf(userPath, "%s%s", path, \
 			wfd->arr[index].ip);
+	printf("check webUserPath: %s\n", userPath);
 	int fd = open(userPath, O_RDONLY);
 	if(fd == -1){
 		return NO;
@@ -92,6 +96,23 @@ Status AskImage(char *buf)
 		return NO;
 	}
 	return YES;
+}
+
+Status AskLogOut(char *buf)
+{
+	if(strcasestr(buf, outNeedle) == NULL){
+		return NO;
+	}
+	return YES;
+}
+
+Status WebLogOut(struct WFD *wfd, int index, char *path)
+{
+	char userPath[USER_PATH_LEN] = {0};
+	sprintf(userPath, "%s%s", path, wfd->arr[index].ip);
+	unlink(userPath);
+
+	return OK;
 }
 
 Status main(int argc, char **argv)
@@ -201,9 +222,16 @@ Status main(int argc, char **argv)
 					recvBuf[len] = '\0';
 					char username[USERNAME_LEN + 1] = {0};
 					if(WebHaveLogged(&wfd, tmp, WEB_USER_PATH, username) == YES){
-						GenWebLogged(sendBuf, &sendLen, username);
+						printf("generate web logged packet\n");
+						if(AskLogOut(recvBuf) == YES){
+							WebLogOut(&wfd, tmp, WEB_USER_PATH);
+							GenWegLogOut(sendBuf, &sendLen, username);
+						}
+						else
+							GenWebLogged(sendBuf, &sendLen, username);
 					}
 					else{
+						printf("web not logged\n");
 						if(AskImage(recvBuf) == YES){
 							if(GenImage(&wfd, tmp, sendBuf, &sendLen, QRCODE_PATH) == ERROR){
 								perror("GenImage");

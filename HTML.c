@@ -30,3 +30,5 @@ const char WEB_HAVENT[] = HTML_TEXT_PREFIX "<h2>Where there is a will, there is 
 
 const char WEB_HAVE[] = HTML_TEXT_PREFIX "<h1>Hello, %s</h1>" HTML_SUFFIX;
 
+const char WEB_LOGOUT[] = HTML_TEXT_PREFIX "<h1>%s, see you again.</h1>" HTML_SUFFIX;
+

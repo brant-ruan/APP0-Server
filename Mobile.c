@@ -91,3 +91,24 @@ Status HaveLogged(char *username, char *path)
 	close(fd);
 	return YES;
 }
+Status QRLogIn(char *username, char *ip, char *path)
+{
+	int fd;
+	char userPath[USER_PATH_LEN] = {0};
+	sprintf(userPath, "%s%s", path, ip);
+	printf("webUserPath: %s\n", userPath);
+	fd = open(userPath, O_RDWR | O_CREAT);
+	if(fd == -1){
+		perror("open");
+		return ERROR;
+	}
+	printf("write username: %s\n", username);
+	if(write(fd, username, strlen(username)) == -1){
+		perror("write");
+		close(fd);
+		return ERROR;
+	}
+
+	close(fd);
+	return OK;
+}
