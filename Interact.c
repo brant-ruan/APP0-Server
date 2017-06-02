@@ -95,9 +95,9 @@ Status Interact(int *mobFd, int *webFd)
 				// nothing to do currently
 			}
 			else{
-				printf("mfd.num: %d\n", mfd.num);
+//				printf("mfd.num: %d\n", mfd.num);
 				tmp = MFDIndex(&mfd, evlist[j].data.fd);
-				printf("tmp: %d\n", tmp);
+//				printf("tmp: %d\n", tmp);
 				struct SC_Response response;
 				struct CS_LogIn logIn;
 				struct CS_SignUp signUp;
@@ -131,8 +131,8 @@ Status Interact(int *mobFd, int *webFd)
 							epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
-						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", logIn.username);
-						snprintf(password, PASSWORD_LEN, "%s", logIn.password);
+						snprintf(mfd.arr[tmp].name, USERNAME_LEN + 1, "%s", logIn.username);
+						snprintf(password, PASSWORD_LEN + 1, "%s", logIn.password);
 						printf("username: %s\n", mfd.arr[tmp].name);
 						printf("password: %s\n", password);
 						printf("logining\n");
@@ -158,8 +158,8 @@ Status Interact(int *mobFd, int *webFd)
 							epoll_ctl(epFd, EPOLL_CTL_DEL, evlist[j].data.fd, NULL);
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
-						snprintf(mfd.arr[tmp].name, USERNAME_LEN, "%s", signUp.username);
-						snprintf(password, PASSWORD_LEN, "%s", signUp.password);
+						snprintf(mfd.arr[tmp].name, USERNAME_LEN + 1, "%s", signUp.username);
+						snprintf(password, PASSWORD_LEN + 1, "%s", signUp.password);
 						printf("signup name: %s\n", mfd.arr[tmp].name);
 						printf("signup password: %s\n", password);
 						if(HaveLogged(mfd.arr[tmp].name, MOBILE_USER_PATH) == YES){
@@ -186,7 +186,7 @@ Status Interact(int *mobFd, int *webFd)
 							MFDDel(&mfd, tmp, MOBILE_USER_PATH);
 						}
 						printf("recv qrcode\n");
-						if(mfd.arr[tmp].state == MOBILE_DOWN){
+						if(mfd.arr[tmp].state != MOBILE_UP){
 							printf("mobile down\n");
 							GenQRIden(&response, ERR_WRONG);
 						}

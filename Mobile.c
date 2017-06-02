@@ -66,6 +66,7 @@ void MFDDel(struct MFD *mfd, int index, char *path)
 Status MobileUp(struct MFD *mfd, int index, char *path)
 {
 	mfd->arr[index].state = MOBILE_UP;
+	printf("mfd->arr[%d].state = MOBILE_UP\n", index);
 	char userPath[USER_PATH_LEN] = {0};
 	sprintf(userPath, "%s%s", path, mfd->arr[index].name);
 	int fd;

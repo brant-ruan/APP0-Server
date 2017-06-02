@@ -120,6 +120,7 @@ Status DBLogIn(MYSQL *mysql, char *username, char *password)
 {
 	int queryRes = 0;
 	MYSQL_RES *mysqlRes;
+	MYSQL_ROW row;
 	char query[QUERY_LEN];
 	sprintf(query, QUERY_LOGIN, username, password);
 	queryRes = mysql_query(mysql, query);
@@ -128,13 +129,24 @@ Status DBLogIn(MYSQL *mysql, char *username, char *password)
 		printf("MySQL error: %s\n", mysql_error(mysql));
 	}
 	mysqlRes = mysql_store_result(mysql);
-
 	if(mysqlRes){
 		if((unsigned long)mysql_num_rows(mysqlRes) > 0){
-			mysql_free_result(mysqlRes);
-			return YES; // username existed
+			row = mysql_fetch_row(mysqlRes);
+			printf("row[0]: %s\n", row[0]);
+			if(atoi(row[0]) > 0){
+				mysql_free_result(mysqlRes);
+				return YES; // username existed
+			}
+			else{
+				printf("No such user\n");
+				return NO;
+			}
 		}
 	}
+	else{
+		printf("mysql_store_result error: %s\n", mysql_error(mysql));
+	}
+
 	mysql_free_result(mysqlRes);
 	return NO;
 }

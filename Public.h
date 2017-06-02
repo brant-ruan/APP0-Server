@@ -95,7 +95,7 @@ struct MobArr{
 	int fd;
 	int flag;
 	int state;
-	char name[USERNAME_LEN];
+	char name[USERNAME_LEN + 1];
 };
 
 struct MFD{
